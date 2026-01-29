@@ -4,7 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.security import check_password_hash
 from flask_migrate import Migrate
 from functools import wraps
-
+from flask_cors import CORS
 from models import Announcement, PointTransaction, db, Admin, House, Captain, Member, Achievement
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -14,7 +14,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'kj3hegh32h4u5gj34nb312cuh4iry8fd7df7d89d8796asuhjc437726fhbejbuy23yuhbe32g43'  
-
+CORS(app)
 db.init_app(app)
 migrate = Migrate(app, db)
 
