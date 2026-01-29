@@ -1,9 +1,351 @@
 {% extends 'base.html' %}
 
-{% block title %}Admin Dashboard - Darsanians's Houses{% endblock %}
+{% block title %}Admin Dashboard - Darsanians' Houses{% endblock %}
 
 {% block content %}
-    <h1>Admin Dashboard</h1>
-    <p>Welcome, Admin</p>
-    <!-- Dashboard content here -->
+<style>
+    .admin-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+    }
+
+    .admin-header {
+        margin-bottom: 2rem;
+    }
+
+    .admin-header h1 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .flash-messages {
+        margin-bottom: 1rem;
+    }
+
+    .flash {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+    }
+
+    .flash.success {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+    }
+
+    .flash.error {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .points-management,
+    .recent-transactions {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .section-title {
+        color: #333;
+        border-bottom: 2px solid #333;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .house-select {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .points-input {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .reason-input {
+        width: 100%;
+        padding: 0.75rem;
+        margin-bottom: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-add {
+        flex: 1;
+        padding: 0.75rem;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .btn-add:hover {
+        background-color: #218838;
+    }
+
+    .btn-deduct {
+        flex: 1;
+        padding: 0.75rem;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+    }
+
+    .btn-deduct:hover {
+        background-color: #c82333;
+    }
+
+    .house-scores {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .scores-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .scores-table th,
+    .scores-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .scores-table th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+    }
+
+    .scores-table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .transaction-list {
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .transaction-item {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .transaction-item:last-child {
+        border-bottom: none;
+    }
+
+    .transaction-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .transaction-points {
+        font-weight: bold;
+    }
+
+    .transaction-points.positive {
+        color: #28a745;
+    }
+
+    .transaction-points.negative {
+        color: #dc3545;
+    }
+
+    .transaction-reason {
+        color: #666;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    .transaction-meta {
+        color: #999;
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>🎯 Admin Dashboard</h1>
+        <p>Welcome, {{ current_user.name }}</p>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="dashboard-grid">
+        <!-- Points Management -->
+        <div class="points-management">
+            <h2 class="section-title">📊 Points Management</h2>
+            
+            <form id="pointsForm">
+                <select class="house-select" id="house_id" name="house_id" required>
+                    <option value="">Select a House</option>
+                    {% for house in houses %}
+                        <option value="{{ house.id }}">{{ house.name }} ({{ house.house_points }} points)</option>
+                    {% endfor %}
+                </select>
+
+                <input type="number" 
+                       class="points-input" 
+                       id="points" 
+                       name="points" 
+                       placeholder="Enter points amount" 
+                       min="1" 
+                       required>
+
+                <textarea class="reason-input" 
+                          id="reason" 
+                          name="reason" 
+                          placeholder="Reason for points adjustment (required)" 
+                          required></textarea>
+
+                <div class="action-buttons">
+                    <button type="button" class="btn-add" onclick="submitPoints('add')">
+                        ➕ Add Points
+                    </button>
+                    <button type="button" class="btn-deduct" onclick="submitPoints('deduct')">
+                        ➖ Deduct Points
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="recent-transactions">
+            <h2 class="section-title">📜 Recent Transactions</h2>
+            
+            {% if recent_transactions %}
+            <div class="transaction-list">
+                {% for transaction in recent_transactions %}
+                <div class="transaction-item">
+                    <div class="transaction-header">
+                        <span><strong>{{ transaction.house.name }}</strong></span>
+                        <span class="transaction-points {% if transaction.points_change > 0 %}positive{% else %}negative{% endif %}">
+                            {% if transaction.points_change > 0 %}+{% endif %}{{ transaction.points_change }}
+                        </span>
+                    </div>
+                    <div class="transaction-reason">{{ transaction.reason }}</div>
+                    <div class="transaction-meta">
+                        by {{ transaction.admin.name }} • {{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="text-align: center; color: #999;">No transactions yet</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Current House Scores -->
+    <div class="house-scores">
+        <h2 class="section-title">🏆 Current House Standings</h2>
+        
+        <table class="scores-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>House</th>
+                    <th>Points</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for house in houses %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ house.name }}</td>
+                    <td><strong>{{ house.house_points }}</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+function submitPoints(action) {
+    const form = document.getElementById('pointsForm');
+    const houseId = document.getElementById('house_id').value;
+    const points = document.getElementById('points').value;
+    const reason = document.getElementById('reason').value;
+
+    if (!houseId || !points || !reason) {
+        alert('Please fill in all fields');
+        return;
+    }
+
+    if (parseInt(points) <= 0) {
+        alert('Points must be a positive number');
+        return;
+    }
+
+    // Create a hidden form and submit
+    const submitForm = document.createElement('form');
+    submitForm.method = 'POST';
+    submitForm.action = action === 'add' ? '{{ url_for("admin_add_points") }}' : '{{ url_for("admin_deduct_points") }}';
+
+    const fields = {
+        'house_id': houseId,
+        'points': points,
+        'reason': reason
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = value;
+        submitForm.appendChild(input);
+    }
+
+    document.body.appendChild(submitForm);
+    submitForm.submit();
+}
+</script>
 {% endblock %}

@@ -17,6 +17,10 @@
         <a class="navbar-brand" href="{{ url_for('home') }}">Darsanians Houses</a>
         <div class="navbar-nav">
             <a class="nav-item nav-link" href="{{ url_for('home') }}">Home</a>
+            <a class="nav-item nav-link" href="{{ url_for('live_scores') }}">Live Scores</a>
+            <a class="nav-item nav-link" href="{{ url_for('members') }}">Members</a>
+            <a class="nav-item nav-link" href="{{ url_for('announcements') }}">Announcements</a>
+            
             {% if current_user.is_authenticated %}
                 {% if current_user.__class__.__name__ == 'Admin' %}
                     <a class="nav-item nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>

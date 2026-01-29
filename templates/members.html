@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}Members - Darsanians' Houses{% endblock %}
+
+{% block content %}
+<style>
+    .members-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+    }
+
+    .members-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .filter-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .filter-section form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-section select {
+        padding: 0.5rem 1rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+    }
+
+    .filter-section button {
+        padding: 0.5rem 1.5rem;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .filter-section button:hover {
+        background-color: #555;
+    }
+
+    .house-section {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+    }
+
+    .house-title {
+        color: #333;
+        border-bottom: 3px solid #333;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .members-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .member-card {
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 1rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .member-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .member-name {
+        font-weight: bold;
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .member-role {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .no-members {
+        text-align: center;
+        color: #999;
+        padding: 2rem;
+        font-style: italic;
+    }
+</style>
+
+<div class="members-container">
+    <div class="members-header">
+        <h1>👥 House Members</h1>
+        <p>Meet all the members of Darsanians' Houses</p>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="get" action="{{ url_for('members') }}">
+            <label for="house">Filter by House:</label>
+            <select name="house" id="house">
+                <option value="">All Houses</option>
+                {% for house in all_houses %}
+                    <option value="{{ house.name }}" {% if selected_house == house.name %}selected{% endif %}>
+                        {{ house.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <button type="submit">Filter</button>
+            {% if selected_house %}
+                <a href="{{ url_for('members') }}" style="text-decoration: none;">
+                    <button type="button">Clear Filter</button>
+                </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <!-- Members by House -->
+    {% for item in houses_with_members %}
+    <div class="house-section">
+        <h2 class="house-title">{{ item.house.name }}</h2>
+        
+        {% if item.members %}
+        <div class="members-grid">
+            {% for member in item.members %}
+            <div class="member-card">
+                <div class="member-name">{{ member.name }}</div>
+                <div class="member-role">{{ member.role }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-members">No members yet in this house</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if not houses_with_members %}
+    <div class="house-section">
+        <div class="no-members">No members found</div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

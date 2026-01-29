@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Announcements - Darsanians' Houses{% endblock %}
+
+{% block content %}
+<style>
+    .announcements-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+
+    .announcements-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .announcements-header h1 {
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .announcement-card {
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .announcement-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+
+    .announcement-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 1rem;
+    }
+
+    .announcement-meta {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #f0f0f0;
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .author-name {
+        font-weight: bold;
+        color: #555;
+    }
+
+    .house-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background-color: #007bff;
+        color: white;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: bold;
+    }
+
+    .announcement-date {
+        color: #999;
+        font-size: 0.9rem;
+    }
+
+    .announcement-content {
+        color: #555;
+        line-height: 1.8;
+        font-size: 1rem;
+        white-space: pre-wrap;
+    }
+
+    .no-announcements {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .no-announcements-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .no-announcements p {
+        color: #999;
+        font-size: 1.1rem;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 0.5rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .divider-text {
+        padding: 0 0.5rem;
+        color: #999;
+        font-size: 0.85rem;
+    }
+</style>
+
+<div class="announcements-container">
+    <div class="announcements-header">
+        <h1>📢 House Announcements</h1>
+        <p>Latest updates from house captains</p>
+    </div>
+
+    {% if announcements %}
+        {% for announcement in announcements %}
+        <div class="announcement-card">
+            <div class="announcement-title">{{ announcement.title }}</div>
+            
+            <div class="announcement-meta">
+                <div class="author-info">
+                    <span>👤</span>
+                    <span class="author-name">{{ announcement.author.name }}</span>
+                </div>
+                <div class="divider">
+                    <span class="divider-text">•</span>
+                </div>
+                <span class="house-badge">{{ announcement.house.name }}</span>
+                <div class="divider">
+                    <span class="divider-text">•</span>
+                </div>
+                <span class="announcement-date">
+                    {{ announcement.created_at.strftime('%B %d, %Y') }}
+                </span>
+            </div>
+            
+            <div class="announcement-content">{{ announcement.content }}</div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-announcements">
+            <div class="no-announcements-icon">📭</div>
+            <p>No announcements yet</p>
+            <p style="font-size: 0.9rem; color: #bbb;">House captains will post updates here</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

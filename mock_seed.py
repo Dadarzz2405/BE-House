@@ -1,0 +1,144 @@
+from werkzeug.security import generate_password_hash
+from app import app
+from models import (
+    db,
+    Admin,
+    House,
+    Captain,
+    Advisor,
+    Member,
+    Achievement
+)
+
+PASSWORD = generate_password_hash("tes123")
+
+def seed_mock_data():
+    with app.app_context():
+
+        # ================= ADMIN =================
+        if not Admin.query.first():
+            admin = Admin(
+                name="System Admin",
+                username="admin",
+                password_hash=PASSWORD
+            )
+            db.session.add(admin)
+
+        # ================= HOUSES =================
+        houses_data = [
+            ("Al-Ghuraab", "Inspired by the crow in the Qur’an"),
+            ("An-Nahl", "Inspired by the bee in the Qur’an"),
+            ("An-Nun", "Inspired by the great fish in the Qur’an"),
+            ("Al-Adiyat", "Inspired by the charging horses in the Qur’an"),
+            ("Al-Hudhud", "Inspired by the hoopoe bird in the Qur’an"),
+            ("An-Naml", "Inspired by the ants in the Qur’an"),
+        ]
+
+        houses = {}
+        for name, desc in houses_data:
+            house = House.query.filter_by(name=name).first()
+            if not house:
+                house = House(
+                    name=name,
+                    description=desc,
+                    house_points=0
+                )
+                db.session.add(house)
+            houses[name] = house
+
+        db.session.flush()
+
+        # ================= CAPTAINS =================
+        captains_data = [
+            ("Captain Ghuraab", "ghuraab", "Al-Ghuraab"),
+            ("Captain Nahl", "nahl", "An-Nahl"),
+            ("Captain Nun", "nun", "An-Nun"),
+            ("Captain Adiyat", "adiyat", "Al-Adiyat"),
+            ("Captain Hudhud", "hudhud", "Al-Hudhud"),
+            ("Captain Naml", "naml", "An-Naml"),
+        ]
+
+        for name, username, house_name in captains_data:
+            if not Captain.query.filter_by(username=username).first():
+                db.session.add(
+                    Captain(
+                        name=name,
+                        username=username,
+                        password_hash=PASSWORD,
+                        house_id=houses[house_name].id
+                    )
+                )
+
+        # ================= ADVISORS =================
+        advisors_data = [
+            ("Mr. Rahman", "House Advisor", "rahman", "Al-Ghuraab"),
+            ("Ms. Aisyah", "House Advisor", "aisyah", "An-Nahl"),
+            ("Mr. Yusuf", "House Advisor", "yusuf", "An-Nun"),
+            ("Ms. Hana", "House Advisor", "hana", "Al-Adiyat"),
+            ("Mr. Salman", "House Advisor", "salman", "Al-Hudhud"),
+            ("Ms. Zahra", "House Advisor", "zahra", "An-Naml"),
+        ]
+
+        for name, role, username, house_name in advisors_data:
+            if not Advisor.query.filter_by(username=username).first():
+                db.session.add(
+                    Advisor(
+                        name=name,
+                        role=role,
+                        bio=f"{name} supervises and guides house members.",
+                        username=username,
+                        password_hash=PASSWORD,
+                        house_id=houses[house_name].id
+                    )
+                )
+
+        # ================= MEMBERS =================
+        members_data = [
+            ("Ahmad", "Member", "Al-Ghuraab"),
+            ("Fatimah", "Member", "Al-Ghuraab"),
+            ("Ali", "Member", "An-Nahl"),
+            ("Amina", "Member", "An-Nahl"),
+            ("Umar", "Member", "An-Nun"),
+            ("Khadijah", "Member", "An-Nun"),
+            ("Hasan", "Member", "Al-Adiyat"),
+            ("Husain", "Member", "Al-Adiyat"),
+            ("Bilal", "Member", "Al-Hudhud"),
+            ("Zainab", "Member", "Al-Hudhud"),
+            ("Yasir", "Member", "An-Naml"),
+            ("Maryam", "Member", "An-Naml"),
+        ]
+
+        for name, role, house_name in members_data:
+            if not Member.query.filter_by(name=name, house_id=houses[house_name].id).first():
+                db.session.add(
+                    Member(
+                        name=name,
+                        role=role,
+                        house_id=houses[house_name].id
+                    )
+                )
+
+        # ================= ACHIEVEMENTS =================
+        achievements_data = [
+            ("Cleanest House", "Maintained the cleanest environment"),
+            ("Best Teamwork", "Excellent collaboration among members"),
+            ("Top Discipline", "Outstanding discipline and conduct"),
+        ]
+
+        for house in houses.values():
+            for title, desc in achievements_data:
+                if not Achievement.query.filter_by(name=title, house_id=house.id).first():
+                    db.session.add(
+                        Achievement(
+                            name=title,
+                            description=desc,
+                            house_id=house.id
+                        )
+                    )
+
+        db.session.commit()
+        print("Mock data seeding completed ✅")
+
+
+if __name__ == "__main__":
+    seed_mock_data()
