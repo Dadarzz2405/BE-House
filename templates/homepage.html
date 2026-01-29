@@ -1,9 +1,66 @@
 {% extends 'base.html' %}
 
-{% block title %}Home - Darsanians's Houses{% endblock %}
+{% block title %}Home - Darsanians' Houses{% endblock %}
 
 {% block content %}
-    <h1>The Darsanians' Houses</h1>
-    <p>Darsanians Houses.</p>
-    
+<h1>The Darsanians' Houses</h1>
+<p>Darsanians Houses, inspired by animals mentioned in the Qur’an.</p>
+
+<div class="houses-container">
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/Al-Ghuraab.jpg') }}" alt="Al-Ghuraab house">
+        <h2>Al-Ghuraab</h2>
+        <p>
+            Inspired by the crow sent by Allah to teach Qabil how to bury his brother.
+            Symbolizes awareness and learning from signs. (Qur’an 5:31)
+        </p>
+    </div>
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/An-Nahl.jpeg') }}" alt="An-Nahl house">
+        <h2>An-Nahl</h2>
+        <p>
+            Inspired by the bee, known for discipline, cooperation, and producing goodness.
+            Represents teamwork and productivity. (Qur’an 16:68–69)
+        </p>
+    </div>
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/An-Nun.jpeg') }}" alt="An-Nun house">
+        <h2>An-Nun</h2>
+        <p>
+            Inspired by the great fish associated with Prophet Yunus (AS).
+            Represents patience, repentance, and trust in Allah. (Qur’an 21:87)
+        </p>
+    </div>
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/Al-Adiyat.jpeg') }}" alt="Al-Adiyat house">
+        <h2>Al-Adiyat</h2>
+        <p>
+            Inspired by the charging horses mentioned in Surah Al-Adiyat.
+            Symbolizes strength, loyalty, and relentless effort. (Qur’an 100:1–5)
+        </p>
+    </div>
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/Al-Hud-hud.jpeg') }}" alt="Al-Hudhud house">
+        <h2>Al-Hudhud</h2>
+        <p>
+            Inspired by the hoopoe bird in the story of Prophet Sulaiman (AS).
+            Represents intelligence, communication, and seeking truth. (Qur’an 27:20–22)
+        </p>
+    </div>
+
+    <div class="house">
+        <img src="{{ url_for('static', filename='assets/An-Naml.jpeg') }}" alt="An-Naml house">
+        <h2>An-Naml</h2>
+        <p>
+            Inspired by the ants who warned one another of danger.
+            Represents leadership, foresight, and community care. (Qur’an 27:18)
+        </p>
+    </div>
+
+</div>
 {% endblock %}
