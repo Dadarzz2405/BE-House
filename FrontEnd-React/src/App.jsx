@@ -4,7 +4,7 @@ import "./App.css";
 
 import Navbar from "./components/navbar/navbar";
 
-import HomePage from "./components/pages/homepage/homePage";
+import HomePage from "./components/pages/homePage/homePage";
 import LiveScores from "./components/pages/livescores/livescores";
 import Announcement from "./components/pages/announcement/announcement";
 
