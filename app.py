@@ -14,7 +14,16 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = '330bf9312848e19d9a88482a033cb4f566c4cbe06911fe1e452ebade42f0bc4c'  
-CORS(app)
+
+# CORS Configuration - Allow React frontend (port 5173)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:5173"],
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type"]
+    }
+})
+
 db.init_app(app)
 migrate = Migrate(app, db)
 
@@ -44,10 +53,10 @@ def load_user(user_id):
     if user:
         return user
     return Captain.query.get(int(user_id))
+
 #=========================================================
+# PUBLIC API ROUTES (for React Frontend)
 #=========================================================
-#=========================================================
-from flask import jsonify
 
 @app.route("/api/houses")
 def get_houses():
@@ -56,7 +65,8 @@ def get_houses():
         {
             "id": h.id,
             "name": h.name,
-            "points": h.points
+            "points": h.house_points,
+            "description": h.description
         }
         for h in houses
     ])
@@ -65,11 +75,12 @@ def get_houses():
 def live_scores():
     houses = House.query.order_by(House.house_points.desc()).all()
     data = []
-    for index, house in enumerate(houses):
+    for index, house in enumerate(houses, start=1):
         data.append({
             'rank': index,
             'name': house.name,
-            'points': house.house_points
+            'points': house.house_points,
+            'description': house.description
         })
     
     return jsonify(data)
@@ -78,7 +89,9 @@ def live_scores():
 def members():
     house_filter = request.args.get('house')
     if house_filter:
-        house = House.query.filter_by(name=house_filter).first_or_400()
+        house = House.query.filter_by(name=house_filter).first()
+        if not house:
+            return jsonify({"error": "House not found"}), 404
         houses = [house]
     else:
         houses = House.query.order_by(House.name).all()
@@ -90,46 +103,22 @@ def members():
         result.append({
             'house': {
                 'id': house.id,
-                'name': house.name
+                'name': house.name,
+                'description': house.description
             },
             'members': [
                 {
                     'id': member.id,
                     'name': member.name,
-                    'achievements': [
-                        {
-                            'id': achievement.id,
-                            'title': achievement.title,
-                            'description': achievement.description
-                        }
-                        for achievement in member.achievements
-                    ]
+                    'role': member.role
                 }
                 for member in members
             ]
         })
 
     return jsonify(result)
-"""
-Jinja2 Template Version
-    houses_with_members = []
-    for house in houses:
-        members = Member.query.filter_by(house_id=house.id).all()
-        houses_with_members.append({
-            'house': house,
-            'members': members
-        })
-    
-    all_houses = House.query.order_by(House.name).all()
 
-    return render_template(
-        'members.html', 
-        houses_with_members=houses_with_members,
-        selected_house=house_filter,
-        all_houses=all_houses
-        )
-"""
-@app.route('/announcements')
+@app.route('/api/announcements')
 def announcements():
     announcements = Announcement.query.order_by(Announcement.created_at.desc()).all()
     return jsonify([
@@ -144,14 +133,21 @@ def announcements():
             },
             'captain': {
                 'id': a.captain.id,
-                'username': a.captain.username
+                'username': a.captain.username,
+                'name': a.captain.name
             }
         }
         for a in announcements
     ])
+
 #=========================================================
+# JINJA TEMPLATE ROUTES (for Admin/Captain Dashboards)
 #=========================================================
-#=========================================================
+
+@app.route('/')
+def home():
+    return render_template('homepage.html')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -180,14 +176,20 @@ def logout():
     logout_user()
     return redirect(url_for('home'))
 
-@app.route('/admin_dashboard')
+@app.route('/admin/dashboard')
 @login_required
+@admin_required
 def admin_dashboard():
-    if not isinstance(current_user, Admin):
-        abort(403)
-
-    houses = House.query.all()
-    return render_template('admin_dashboard.html', houses=houses)
+    houses = House.query.order_by(House.house_points.desc()).all()
+    recent_transactions = PointTransaction.query.order_by(
+        PointTransaction.timestamp.desc()
+    ).limit(10).all()
+    
+    return render_template(
+        'dashboard_admin.html', 
+        houses=houses,
+        recent_transactions=recent_transactions
+    )
 
 @app.route('/admin/points/add', methods=['POST'])
 @login_required
@@ -195,7 +197,7 @@ def admin_dashboard():
 def admin_add_points():
     house_id = request.form.get('house_id', type=int)
     points = request.form.get('points', type=int)
-    reason = request.form.get('reason').strip()
+    reason = request.form.get('reason', '').strip()
 
     if not house_id or not points or not reason:
         flash('All fields are required.', 'error')
@@ -206,17 +208,17 @@ def admin_add_points():
         return redirect(url_for('admin_dashboard'))
     
     house = House.query.get_or_404(house_id)
-
     house.house_points += points
 
-    trasnaction = PointTransaction(
+    transaction = PointTransaction(
         house_id=house.id,
         points_change=points,
         reason=reason,
         admin_id=current_user.id
     )
-    db.session.add(trasnaction)
+    db.session.add(transaction)
     db.session.commit()
+    
     flash(f'Successfully added {points} points to {house.name}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
@@ -224,9 +226,9 @@ def admin_add_points():
 @login_required
 @admin_required
 def admin_deduct_points():
-    house_id = request.form('house_id, trype=int')
-    points = request.form('points', type=int)
-    reason = request.form('reason').strip()
+    house_id = request.form.get('house_id', type=int)
+    points = request.form.get('points', type=int)
+    reason = request.form.get('reason', '').strip()
 
     if not house_id or not points or not reason:
         flash('All fields are required.', 'error')
@@ -237,34 +239,36 @@ def admin_deduct_points():
         return redirect(url_for('admin_dashboard'))
     
     house = House.query.get_or_404(house_id)
-
     house.house_points -= points
 
-    trasnaction = PointTransaction(
+    transaction = PointTransaction(
         house_id=house.id,
-        points_change=points,
+        points_change=-points,  # Negative for deduction
         reason=reason,
         admin_id=current_user.id
     )
-    db.session.add(trasnaction)
+    db.session.add(transaction)
     db.session.commit()
-    flash(f'Successfully deduct {points} points to {house.name}.', 'success')
+    
+    flash(f'Successfully deducted {points} points from {house.name}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/captain_dashboard')
+@app.route('/captain/dashboard')
 @login_required
+@captain_required
 def captain_dashboard():
-    house = None
-    members = None
+    house = House.query.get(current_user.house_id)
+    members = Member.query.filter_by(house_id=current_user.house_id).all()
 
     my_announcements = Announcement.query.filter_by(
         captain_id=current_user.id
-        ).order_by(Announcement.created_at.desc()).all()
+    ).order_by(Announcement.created_at.desc()).all()
     
     return render_template(
         'dashboard_captain.html',
         house=house,
-        members=members
+        members=members,
+        my_announcements=my_announcements
     )
 
 @app.route('/captain/announcements/create', methods=['GET', 'POST'])
@@ -272,8 +276,8 @@ def captain_dashboard():
 @captain_required
 def captain_create_announcement():
     if request.method == 'POST':
-        title = request.form('title', '').strip()
-        content = request.form('content', '').strip()
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
 
         if not title or not content:
             flash('Title and content are required.', 'error')
@@ -283,20 +287,22 @@ def captain_create_announcement():
             flash('Title must be less than 200 characters.', 'error')
             return redirect(url_for('captain_create_announcement'))
         
-        announcements = Announcement(
+        from datetime import datetime
+        announcement = Announcement(
             title=title,
             content=content,
             house_id=current_user.house_id,
-            captain_id=current_user.id
+            captain_id=current_user.id,
+            created_at=datetime.utcnow()
         )
 
-        db.session.add(announcements)
+        db.session.add(announcement)
         db.session.commit()
 
         flash('Announcement created successfully.', 'success')
         return redirect(url_for('captain_dashboard'))
     
-    return render_template('create_announcement.html')
+    return render_template('captain_create_announcement.html')
 
 @app.route('/captain/announcements/<int:announcement_id>/delete', methods=['POST'])
 @login_required
@@ -319,4 +325,4 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
