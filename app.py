@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = 'kj3hegh32h4u5gj34nb312cuh4iry8fd7df7d89d8796asuhjc437726fhbejbuy23yuhbe32g43'  
+app.config['SECRET_KEY'] = '330bf9312848e19d9a88482a033cb4f566c4cbe06911fe1e452ebade42f0bc4c'  
 CORS(app)
 db.init_app(app)
 migrate = Migrate(app, db)
