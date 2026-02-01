@@ -1,351 +1,490 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Darsanians' Houses</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Admin Dashboard - Darsanians' Houses{% endblock %}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
 
-{% block content %}
-<style>
-    .admin-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-    }
+        /* Navbar */
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .admin-header {
-        margin-bottom: 2rem;
-    }
+        .navbar-custom .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
 
-    .admin-header h1 {
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
+        .navbar-custom .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+        }
 
-    .flash-messages {
-        margin-bottom: 1rem;
-    }
+        .navbar-custom .nav-link:hover {
+            color: white !important;
+        }
 
-    .flash {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
-    }
+        /* Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
 
-    .flash.success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-    }
+        /* Header */
+        .dashboard-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
 
-    .flash.error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-    }
+        .dashboard-header h1 {
+            color: #333;
+            margin: 0 0 0.5rem 0;
+        }
 
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-        margin-bottom: 2rem;
-    }
+        .dashboard-header p {
+            color: #666;
+            margin: 0;
+        }
 
-    .points-management,
-    .recent-transactions {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        /* Cards */
+        .card-custom {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .section-title {
-        color: #333;
-        border-bottom: 2px solid #333;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1.5rem;
-    }
+        .card-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+        }
 
-    .house-select {
-        width: 100%;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-    }
+        /* Flash Messages */
+        .flash-messages {
+            margin-bottom: 1.5rem;
+        }
 
-    .points-input {
-        width: 100%;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-    }
+        .alert {
+            border-radius: 8px;
+        }
 
-    .reason-input {
-        width: 100%;
-        padding: 0.75rem;
-        margin-bottom: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        min-height: 80px;
-        resize: vertical;
-    }
+        /* Forms */
+        .form-select, .form-control {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 0.6rem 1rem;
+        }
 
-    .action-buttons {
-        display: flex;
-        gap: 1rem;
-    }
+        .form-select:focus, .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
 
-    .btn-add {
-        flex: 1;
-        padding: 0.75rem;
-        background-color: #28a745;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: bold;
-    }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
 
-    .btn-add:hover {
-        background-color: #218838;
-    }
+        /* Buttons */
+        .btn-add {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
 
-    .btn-deduct {
-        flex: 1;
-        padding: 0.75rem;
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: bold;
-    }
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
 
-    .btn-deduct:hover {
-        background-color: #c82333;
-    }
+        .btn-deduct {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
 
-    .house-scores {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        .btn-deduct:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            color: white;
+        }
 
-    .scores-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
+        /* Tables */
+        .table-custom {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
-    .scores-table th,
-    .scores-table td {
-        padding: 1rem;
-        text-align: left;
-        border-bottom: 1px solid #ddd;
-    }
+        .table-custom thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
 
-    .scores-table th {
-        background-color: #f8f9fa;
-        font-weight: bold;
-    }
+        .table-custom th {
+            padding: 1rem;
+            font-weight: 600;
+        }
 
-    .scores-table tbody tr:hover {
-        background-color: #f5f5f5;
-    }
+        .table-custom td {
+            padding: 1rem;
+            vertical-align: middle;
+        }
 
-    .transaction-list {
-        max-height: 400px;
-        overflow-y: auto;
-    }
+        .table-custom tbody tr:hover {
+            background-color: #f8f9fa;
+        }
 
-    .transaction-item {
-        padding: 1rem;
-        border-bottom: 1px solid #eee;
-    }
+        /* Rank Badges */
+        .rank-badge {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+            border-radius: 50%;
+            font-weight: bold;
+            color: white;
+        }
 
-    .transaction-item:last-child {
-        border-bottom: none;
-    }
+        .rank-1 { background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%); color: #333; }
+        .rank-2 { background: linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%); color: #333; }
+        .rank-3 { background: linear-gradient(135deg, #CD7F32 0%, #B8733D 100%); }
+        .rank-other { background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%); }
 
-    .transaction-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-    }
+        /* Transaction List */
+        .transaction-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease;
+        }
 
-    .transaction-points {
-        font-weight: bold;
-    }
+        .transaction-item:hover {
+            background-color: #f8f9fa;
+        }
 
-    .transaction-points.positive {
-        color: #28a745;
-    }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
 
-    .transaction-points.negative {
-        color: #dc3545;
-    }
+        .transaction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
 
-    .transaction-reason {
-        color: #666;
-        font-size: 0.9rem;
-        font-style: italic;
-    }
+        .transaction-house {
+            font-weight: bold;
+            color: #333;
+        }
 
-    .transaction-meta {
-        color: #999;
-        font-size: 0.8rem;
-        margin-top: 0.25rem;
-    }
-</style>
+        .transaction-points {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
 
-<div class="admin-container">
-    <div class="admin-header">
-        <h1>🎯 Admin Dashboard</h1>
-        <p>Welcome, {{ current_user.name }}</p>
-    </div>
+        .transaction-points.positive {
+            color: #28a745;
+        }
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
+        .transaction-points.negative {
+            color: #dc3545;
+        }
+
+        .transaction-reason {
+            color: #666;
+            font-style: italic;
+            margin-bottom: 0.25rem;
+        }
+
+        .transaction-meta {
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Logout Button */
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background-color: #c82333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                🎯 Admin Dashboard
+            </a>
+            <div class="ms-auto">
+                <span class="navbar-text text-white me-3">
+                    Welcome, <strong>{{ current_user.name }}</strong>
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                    Logout
+                </a>
             </div>
-        {% endif %}
-    {% endwith %}
+        </div>
+    </nav>
 
-    <div class="dashboard-grid">
-        <!-- Points Management -->
-        <div class="points-management">
-            <h2 class="section-title">📊 Points Management</h2>
-            
-            <form id="pointsForm">
-                <select class="house-select" id="house_id" name="house_id" required>
-                    <option value="">Select a House</option>
-                    {% for house in houses %}
-                        <option value="{{ house.id }}">{{ house.name }} ({{ house.house_points }} points)</option>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>🎯 Admin Dashboard</h1>
+            <p>Manage house points and view standings</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
                     {% endfor %}
-                </select>
-
-                <input type="number" 
-                       class="points-input" 
-                       id="points" 
-                       name="points" 
-                       placeholder="Enter points amount" 
-                       min="1" 
-                       required>
-
-                <textarea class="reason-input" 
-                          id="reason" 
-                          name="reason" 
-                          placeholder="Reason for points adjustment (required)" 
-                          required></textarea>
-
-                <div class="action-buttons">
-                    <button type="button" class="btn-add" onclick="submitPoints('add')">
-                        ➕ Add Points
-                    </button>
-                    <button type="button" class="btn-deduct" onclick="submitPoints('deduct')">
-                        ➖ Deduct Points
-                    </button>
                 </div>
-            </form>
-        </div>
-
-        <!-- Recent Transactions -->
-        <div class="recent-transactions">
-            <h2 class="section-title">📜 Recent Transactions</h2>
-            
-            {% if recent_transactions %}
-            <div class="transaction-list">
-                {% for transaction in recent_transactions %}
-                <div class="transaction-item">
-                    <div class="transaction-header">
-                        <span><strong>{{ transaction.house.name }}</strong></span>
-                        <span class="transaction-points {% if transaction.points_change > 0 %}positive{% else %}negative{% endif %}">
-                            {% if transaction.points_change > 0 %}+{% endif %}{{ transaction.points_change }}
-                        </span>
-                    </div>
-                    <div class="transaction-reason">{{ transaction.reason }}</div>
-                    <div class="transaction-meta">
-                        by {{ transaction.admin.name }} • {{ transaction.created_at.strftime('%Y-%m-%d %H:%M') }}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <p style="text-align: center; color: #999;">No transactions yet</p>
             {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-grid">
+            <!-- Points Management -->
+            <div class="card-custom">
+                <h2 class="card-title">📊 Points Management</h2>
+                
+                <form id="pointsForm" onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="house_id" class="form-label">Select House</label>
+                        <select class="form-select" id="house_id" name="house_id" required>
+                            <option value="">Choose a house...</option>
+                            {% for house in houses %}
+                                <option value="{{ house.id }}">
+                                    {{ house.name }} ({{ house.house_points }} points)
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="points" class="form-label">Points Amount</label>
+                        <input 
+                            type="number" 
+                            class="form-control" 
+                            id="points" 
+                            name="points" 
+                            placeholder="Enter points amount" 
+                            min="1" 
+                            required
+                        >
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason</label>
+                        <textarea 
+                            class="form-control" 
+                            id="reason" 
+                            name="reason" 
+                            rows="3" 
+                            placeholder="Why are you adding/deducting points?"
+                            required
+                        ></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-add" onclick="submitPoints('add')">
+                            ➕ Add Points
+                        </button>
+                        <button type="button" class="btn btn-deduct" onclick="submitPoints('deduct')">
+                            ➖ Deduct Points
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="card-custom">
+                <h2 class="card-title">📜 Recent Transactions</h2>
+                
+                {% if recent_transactions %}
+                    <div style="max-height: 450px; overflow-y: auto;">
+                        {% for transaction in recent_transactions %}
+                            <div class="transaction-item">
+                                <div class="transaction-header">
+                                    <span class="transaction-house">{{ transaction.house.name }}</span>
+                                    <span class="transaction-points {% if transaction.points_change > 0 %}positive{% else %}negative{% endif %}">
+                                        {% if transaction.points_change > 0 %}+{% endif %}{{ transaction.points_change }}
+                                    </span>
+                                </div>
+                                <div class="transaction-reason">{{ transaction.reason }}</div>
+                                <div class="transaction-meta">
+                                    by {{ transaction.admin.name }} • {{ transaction.timestamp.strftime('%Y-%m-%d %H:%M') }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-center text-muted">No transactions yet</p>
+                {% endif %}
+            </div>
+
+            <!-- Current House Standings -->
+            <div class="card-custom full-width">
+                <h2 class="card-title">🏆 Current House Standings</h2>
+                
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Rank</th>
+                            <th>House Name</th>
+                            <th style="width: 120px;">Points</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for house in houses %}
+                            <tr>
+                                <td>
+                                    <span class="rank-badge {% if loop.index == 1 %}rank-1{% elif loop.index == 2 %}rank-2{% elif loop.index == 3 %}rank-3{% else %}rank-other{% endif %}">
+                                        {{ loop.index }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>{{ house.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ house.description }}</small>
+                                </td>
+                                <td>
+                                    <strong style="font-size: 1.2rem; color: #667eea;">
+                                        {{ house.house_points }}
+                                    </strong>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Current House Scores -->
-    <div class="house-scores">
-        <h2 class="section-title">🏆 Current House Standings</h2>
-        
-        <table class="scores-table">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>House</th>
-                    <th>Points</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for house in houses %}
-                <tr>
-                    <td>{{ loop.index }}</td>
-                    <td>{{ house.name }}</td>
-                    <td><strong>{{ house.house_points }}</strong></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function submitPoints(action) {
+            const form = document.getElementById('pointsForm');
+            const houseId = document.getElementById('house_id').value;
+            const points = document.getElementById('points').value;
+            const reason = document.getElementById('reason').value;
 
-<script>
-function submitPoints(action) {
-    const form = document.getElementById('pointsForm');
-    const houseId = document.getElementById('house_id').value;
-    const points = document.getElementById('points').value;
-    const reason = document.getElementById('reason').value;
+            // Validation
+            if (!houseId || !points || !reason) {
+                alert('Please fill in all fields');
+                return;
+            }
 
-    if (!houseId || !points || !reason) {
-        alert('Please fill in all fields');
-        return;
-    }
+            if (parseInt(points) <= 0) {
+                alert('Points must be a positive number');
+                return;
+            }
 
-    if (parseInt(points) <= 0) {
-        alert('Points must be a positive number');
-        return;
-    }
+            // Confirmation
+            const houseName = document.getElementById('house_id').options[document.getElementById('house_id').selectedIndex].text;
+            const confirmMsg = `Are you sure you want to ${action} ${points} points ${action === 'add' ? 'to' : 'from'} ${houseName}?\n\nReason: ${reason}`;
+            
+            if (!confirm(confirmMsg)) {
+                return;
+            }
 
-    // Create a hidden form and submit
-    const submitForm = document.createElement('form');
-    submitForm.method = 'POST';
-    submitForm.action = action === 'add' ? '{{ url_for("admin_add_points") }}' : '{{ url_for("admin_deduct_points") }}';
+            // Create and submit form
+            const submitForm = document.createElement('form');
+            submitForm.method = 'POST';
+            submitForm.action = action === 'add' 
+                ? '{{ url_for("admin_add_points") }}' 
+                : '{{ url_for("admin_deduct_points") }}';
 
-    const fields = {
-        'house_id': houseId,
-        'points': points,
-        'reason': reason
-    };
+            const fields = {
+                'house_id': houseId,
+                'points': points,
+                'reason': reason
+            };
 
-    for (const [key, value] of Object.entries(fields)) {
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = key;
-        input.value = value;
-        submitForm.appendChild(input);
-    }
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                submitForm.appendChild(input);
+            }
 
-    document.body.appendChild(submitForm);
-    submitForm.submit();
-}
-</script>
-{% endblock %}
+            document.body.appendChild(submitForm);
+            submitForm.submit();
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -140,43 +140,46 @@ def announcements():
         }
         for a in announcements
     ])
-@app.route('/')
-def home():
-    return render_template('homepage.html')
 
-@app.route('/api/login', methods=['POST'])
-def login_api():
-    data = request.get_json()
+#=========================================================
+#                   LOGIN/LOGOUT ROUTES
+#=========================================================
 
-    username = data['username']
-    password = data['password']
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        user = (
+            Admin.query.filter_by(username=username).first()
+            or Captain.query.filter_by(username=username).first()
+        )
+        
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            
+            if isinstance(user, Admin):
+                return redirect(url_for('admin_dashboard'))
+            else:
+                return redirect(url_for('captain_dashboard'))
+        
+        flash('Invalid username or password', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template('login.html')
 
-    user = (
-        Admin.query.filter_by(username=username).first()
-        or Captain.query.filter_by(username=username).first()
-    )
-
-    if user and check_password_hash(user.password_hash, password):
-        login_user(user)  
-
-        return jsonify({
-            'id': user.id,
-            'username': user.username,
-            'name': user.name,
-            'role': 'admin' if isinstance(user, Admin) else 'captain'
-        }), 200
-
-    return jsonify({'error': 'Invalid username or password'}), 401
-
-@app.route('/api/logout', methods=['POST'])
+@app.route('/logout')
 @login_required
-def logout_api():
+def logout():
     logout_user()
-    return jsonify({"success": True}), 200
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('login'))
 
 #=========================================================
-#                   JINJA TEMPLATE ROUTES
+#                   JINJA TEMPLATE ROUTES (Admin)
 #=========================================================
+
 @app.route('/admin/dashboard')
 @login_required
 @admin_required
@@ -254,6 +257,10 @@ def admin_deduct_points():
     flash(f'Successfully deducted {points} points from {house.name}.', 'success')
     return redirect(url_for('admin_dashboard'))
 
+#=========================================================
+#                   JINJA TEMPLATE ROUTES (Captain)
+#=========================================================
+
 @app.route('/captain/dashboard')
 @login_required
 @captain_required
@@ -316,6 +323,23 @@ def captain_delete_announcement(announcement_id):
     db.session.commit()
     flash('Announcement deleted successfully.', 'success')
     return redirect(url_for('captain_dashboard'))
+
+#=========================================================
+#                   REACT FRONTEND ROUTES (SPA)
+#=========================================================
+
+@app.route('/')
+@app.route('/<path:path>')
+def serve_react(path=''):
+    """Serve React app for all non-admin/captain routes"""
+    # Don't serve React for admin/captain/login routes
+    if path.startswith('admin') or path.startswith('captain') or path == 'login':
+        abort(404)
+    return render_template('react_base.html')
+
+#=========================================================
+#                   ERROR HANDLERS
+#=========================================================
 
 @app.errorhandler(403)
 def forbidden(e):

@@ -1,260 +1,351 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Captain Dashboard - Darsanians' Houses</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Captain Dashboard - Darsanians' Houses{% endblock %}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
 
-{% block content %}
-<style>
-    .captain-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-    }
+        /* Navbar */
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .captain-header {
-        margin-bottom: 2rem;
-    }
+        .navbar-custom .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
 
-    .captain-header h1 {
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
+        /* Container */
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
 
-    .house-banner {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        text-align: center;
-    }
+        /* House Banner */
+        .house-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
 
-    .house-banner h2 {
-        margin: 0;
-        font-size: 2rem;
-    }
+        .house-banner h2 {
+            margin: 0 0 1rem 0;
+            font-size: 2rem;
+        }
 
-    .house-points {
-        font-size: 3rem;
-        font-weight: bold;
-        margin: 1rem 0;
-    }
+        .house-points {
+            font-size: 3.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
 
-    .flash-messages {
-        margin-bottom: 1rem;
-    }
+        .house-description {
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
 
-    .flash {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
-    }
+        /* Cards */
+        .card-custom {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
 
-    .flash.success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-    }
+        .card-title {
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #667eea;
+        }
 
-    .flash.error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-    }
+        /* Flash Messages */
+        .alert {
+            border-radius: 8px;
+        }
 
-    .dashboard-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
+        /* Members List */
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+        }
 
-    .card {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        .member-card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
 
-    .card-title {
-        color: #333;
-        border-bottom: 2px solid #333;
-        padding-bottom: 0.5rem;
-        margin-bottom: 1.5rem;
-    }
+        .member-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #667eea;
+        }
 
-    .members-list {
-        max-height: 400px;
-        overflow-y: auto;
-    }
+        .member-name {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
 
-    .member-item {
-        padding: 0.75rem;
-        border-bottom: 1px solid #eee;
-    }
+        .member-role {
+            color: #666;
+            font-size: 0.9rem;
+        }
 
-    .member-item:last-child {
-        border-bottom: none;
-    }
+        /* Announcements */
+        .announcement-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
 
-    .member-name {
-        font-weight: bold;
-        color: #333;
-    }
+        .announcement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
 
-    .member-role {
-        color: #666;
-        font-size: 0.9rem;
-    }
+        .announcement-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+        }
 
-    .btn-create {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        font-weight: bold;
-        transition: background-color 0.3s;
-    }
+        .announcement-date {
+            color: #999;
+            font-size: 0.85rem;
+        }
 
-    .btn-create:hover {
-        background-color: #0056b3;
-    }
+        .announcement-content {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            white-space: pre-wrap;
+        }
 
-    .announcements-section {
-        grid-column: 1 / -1;
-    }
+        .btn-delete {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    .announcement-item {
-        background: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-    }
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
 
-    .announcement-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: start;
-        margin-bottom: 1rem;
-    }
+        .btn-create {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
 
-    .announcement-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-        color: #333;
-    }
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
 
-    .announcement-date {
-        color: #999;
-        font-size: 0.85rem;
-    }
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
 
-    .announcement-content {
-        color: #555;
-        line-height: 1.6;
-        margin-bottom: 1rem;
-    }
+        @media (max-width: 992px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
 
-    .btn-delete {
-        padding: 0.5rem 1rem;
-        background-color: #dc3545;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9rem;
-    }
+        .full-width {
+            grid-column: 1 / -1;
+        }
 
-    .btn-delete:hover {
-        background-color: #c82333;
-    }
+        .no-content {
+            text-align: center;
+            color: #999;
+            padding: 2rem;
+            font-style: italic;
+        }
 
-    .no-content {
-        text-align: center;
-        color: #999;
-        padding: 2rem;
-        font-style: italic;
-    }
-</style>
+        /* Logout Button */
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
 
-<div class="captain-container">
-    <div class="captain-header">
-        <h1>🎖️ Captain Dashboard</h1>
-        <p>Welcome, {{ current_user.name }}</p>
-    </div>
-
-    <!-- House Banner -->
-    <div class="house-banner">
-        <h2>{{ house.name }}</h2>
-        <div class="house-points">{{ house.house_points }}</div>
-        <p>Total House Points</p>
-    </div>
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-messages">
-                {% for category, message in messages %}
-                    <div class="flash {{ category }}">{{ message }}</div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <div class="dashboard-grid">
-        <!-- House Members -->
-        <div class="card">
-            <h2 class="card-title">👥 House Members</h2>
-            
-            {% if members %}
-            <div class="members-list">
-                {% for member in members %}
-                <div class="member-item">
-                    <div class="member-name">{{ member.name }}</div>
-                    <div class="member-role">{{ member.role }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="no-content">No members in your house yet</div>
-            {% endif %}
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card">
-            <h2 class="card-title">⚡ Quick Actions</h2>
-            <a href="{{ url_for('captain_create_announcement') }}" class="btn-create">
-                📢 Create New Announcement
+        .btn-logout:hover {
+            background-color: #c82333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                🎖️ Captain Dashboard
             </a>
+            <div class="ms-auto">
+                <span class="navbar-text text-white me-3">
+                    Welcome, <strong>{{ current_user.name }}</strong>
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- House Banner -->
+        <div class="house-banner">
+            <h2>{{ house.name }}</h2>
+            <div class="house-points">{{ house.house_points }}</div>
+            <p>Total House Points</p>
+            <p class="house-description">{{ house.description }}</p>
         </div>
 
-        <!-- My Announcements -->
-        <div class="card announcements-section">
-            <h2 class="card-title">📢 My Announcements</h2>
-            
-            {% if my_announcements %}
-                {% for announcement in my_announcements %}
-                <div class="announcement-item">
-                    <div class="announcement-header">
-                        <div>
-                            <div class="announcement-title">{{ announcement.title }}</div>
-                            <div class="announcement-date">
-                                {{ announcement.created_at.strftime('%B %d, %Y at %I:%M %p') }}
-                            </div>
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages mb-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
-                        <form method="post" action="{{ url_for('captain_delete_announcement', announcement_id=announcement.id) }}" style="margin: 0;">
-                            <button type="submit" class="btn-delete" onclick="return confirm('Are you sure you want to delete this announcement?')">
-                                🗑️ Delete
-                            </button>
-                        </form>
-                    </div>
-                    <div class="announcement-content">{{ announcement.content }}</div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            {% else %}
-            <div class="no-content">You haven't posted any announcements yet</div>
             {% endif %}
+        {% endwith %}
+
+        <div class="dashboard-grid">
+            <!-- House Members -->
+            <div class="card-custom">
+                <h2 class="card-title">👥 House Members</h2>
+                
+                {% if members %}
+                    <div class="members-grid">
+                        {% for member in members %}
+                            <div class="member-card">
+                                <div class="member-name">{{ member.name }}</div>
+                                <div class="member-role">{{ member.role }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="no-content">No members in your house yet</div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card-custom">
+                <h2 class="card-title">⚡ Quick Actions</h2>
+                <a href="{{ url_for('captain_create_announcement') }}" class="btn-create">
+                    📢 Create New Announcement
+                </a>
+                <p class="text-muted mt-3 mb-0">
+                    Create announcements to communicate with your house members and the entire school.
+                </p>
+            </div>
+
+            <!-- My Announcements -->
+            <div class="card-custom full-width">
+                <h2 class="card-title">📢 My Announcements</h2>
+                
+                {% if my_announcements %}
+                    {% for announcement in my_announcements %}
+                        <div class="announcement-card">
+                            <div class="announcement-header">
+                                <div>
+                                    <div class="announcement-title">{{ announcement.title }}</div>
+                                    <div class="announcement-date">
+                                        {{ announcement.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                    </div>
+                                </div>
+                                <form method="post" 
+                                      action="{{ url_for('captain_delete_announcement', announcement_id=announcement.id) }}" 
+                                      style="margin: 0;"
+                                      onsubmit="return confirm('Are you sure you want to delete this announcement?')">
+                                    <button type="submit" class="btn-delete">
+                                        🗑️ Delete
+                                    </button>
+                                </form>
+                            </div>
+                            <div class="announcement-content">{{ announcement.content }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-content">
+                        You haven't posted any announcements yet
+                        <br>
+                        <a href="{{ url_for('captain_create_announcement') }}" class="btn-create mt-3">
+                            Create Your First Announcement
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
-</div>
-{% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

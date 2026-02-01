@@ -1,184 +1,355 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Announcement - Darsanians' Houses</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-{% block title %}Create Announcement - Darsanians' Houses{% endblock %}
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
 
-{% block content %}
-<style>
-    .announcement-form-container {
-        max-width: 800px;
-        margin: 2rem auto;
-    }
+        /* Navbar */
+        .navbar-custom {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .form-header {
-        text-align: center;
-        margin-bottom: 2rem;
-    }
+        .navbar-custom .navbar-brand {
+            color: white !important;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
 
-    .form-card {
-        background: white;
-        padding: 2rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+        /* Container */
+        .form-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
 
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
+        /* Header */
+        .form-header {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
 
-    .form-group label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-        color: #333;
-    }
+        .form-header h1 {
+            color: #333;
+            margin: 0 0 0.5rem 0;
+        }
 
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        font-family: inherit;
-    }
+        .form-header p {
+            color: #666;
+            margin: 0;
+        }
 
-    .form-group textarea {
-        min-height: 200px;
-        resize: vertical;
-    }
+        /* Form Card */
+        .form-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
 
-    .char-count {
-        text-align: right;
-        color: #666;
-        font-size: 0.85rem;
-        margin-top: 0.25rem;
-    }
+        /* Form Groups */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
 
-    .form-actions {
-        display: flex;
-        gap: 1rem;
-        justify-content: flex-end;
-    }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
 
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 4px;
-        font-size: 1rem;
-        cursor: pointer;
-        font-weight: bold;
-        text-decoration: none;
-        display: inline-block;
-    }
+        .form-control {
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
 
-    .btn-submit {
-        background-color: #28a745;
-        color: white;
-    }
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            outline: none;
+        }
 
-    .btn-submit:hover {
-        background-color: #218838;
-    }
+        textarea.form-control {
+            min-height: 200px;
+            resize: vertical;
+            font-family: inherit;
+        }
 
-    .btn-cancel {
-        background-color: #6c757d;
-        color: white;
-    }
+        .char-count {
+            text-align: right;
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+        }
 
-    .btn-cancel:hover {
-        background-color: #5a6268;
-    }
+        .char-count.warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
 
-    .flash {
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-    }
+        .help-text {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
 
-    .flash.error {
-        background-color: #f8d7da;
-        border: 1px solid #f5c6cb;
-        color: #721c24;
-    }
+        /* Buttons */
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            padding-top: 1rem;
+            border-top: 2px solid #f0f0f0;
+            margin-top: 2rem;
+        }
 
-    .help-text {
-        color: #666;
-        font-size: 0.9rem;
-        margin-top: 0.25rem;
-    }
-</style>
+        .btn {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
 
-<div class="announcement-form-container">
-    <div class="form-header">
-        <h1>📢 Create New Announcement</h1>
-        <p>Post a universal announcement visible to all houses</p>
-    </div>
+        .btn-submit {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
 
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+            color: white;
+        }
 
-    <div class="form-card">
-        <form method="post" action="{{ url_for('captain_create_announcement') }}">
-            <div class="form-group">
-                <label for="title">Announcement Title *</label>
-                <input type="text" 
-                       id="title" 
-                       name="title" 
-                       maxlength="200" 
-                       required 
-                       placeholder="Enter a clear, concise title"
-                       oninput="updateCharCount('title', 'title-count', 200)">
-                <div class="char-count">
-                    <span id="title-count">0</span> / 200 characters
-                </div>
-            </div>
+        .btn-cancel {
+            background-color: #6c757d;
+            color: white;
+        }
 
-            <div class="form-group">
-                <label for="content">Announcement Content *</label>
-                <textarea id="content" 
-                          name="content" 
-                          required 
-                          placeholder="Write your announcement here..."
-                          oninput="updateCharCount('content', 'content-count')"></textarea>
-                <div class="help-text">
-                    Be clear and professional. This will be visible to all students.
-                </div>
-                <div class="char-count">
-                    <span id="content-count">0</span> characters
-                </div>
-            </div>
+        .btn-cancel:hover {
+            background-color: #5a6268;
+            color: white;
+        }
 
-            <div class="form-actions">
-                <a href="{{ url_for('captain_dashboard') }}" class="btn btn-cancel">
-                    Cancel
+        /* Flash Messages */
+        .alert {
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        /* Preview Box */
+        .preview-box {
+            background: #f8f9fa;
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .preview-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+
+        .preview-content {
+            color: #555;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .preview-empty {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Logout Button */
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-logout:hover {
+            background-color: #c82333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('captain_dashboard') }}">
+                🎖️ Captain Dashboard
+            </a>
+            <div class="ms-auto">
+                <span class="navbar-text text-white me-3">
+                    Welcome, <strong>{{ current_user.name }}</strong>
+                </span>
+                <a href="{{ url_for('logout') }}" class="btn btn-logout">
+                    Logout
                 </a>
-                <button type="submit" class="btn btn-submit">
-                    ✅ Post Announcement
-                </button>
             </div>
-        </form>
-    </div>
-</div>
+        </div>
+    </nav>
 
-<script>
-function updateCharCount(inputId, countId, maxLength = null) {
-    const input = document.getElementById(inputId);
-    const count = document.getElementById(countId);
-    const length = input.value.length;
-    
-    count.textContent = length;
-    
-    if (maxLength && length > maxLength * 0.9) {
-        count.style.color = '#dc3545';
-    } else {
-        count.style.color = '#666';
-    }
-}
-</script>
-{% endblock %}
+    <div class="form-container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Form Header -->
+        <div class="form-header">
+            <h1>📢 Create New Announcement</h1>
+            <p>Post an announcement visible to all houses and students</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('captain_create_announcement') }}">
+                <div class="form-group">
+                    <label for="title" class="form-label">Announcement Title *</label>
+                    <input 
+                        type="text" 
+                        id="title" 
+                        name="title" 
+                        class="form-control"
+                        maxlength="200" 
+                        required 
+                        placeholder="Enter a clear, concise title"
+                        oninput="updateCharCount('title', 'title-count', 200); updatePreview()"
+                    >
+                    <div class="char-count">
+                        <span id="title-count">0</span> / 200 characters
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="content" class="form-label">Announcement Content *</label>
+                    <textarea 
+                        id="content" 
+                        name="content" 
+                        class="form-control"
+                        required 
+                        placeholder="Write your announcement here... Be clear and professional."
+                        oninput="updateCharCount('content', 'content-count'); updatePreview()"
+                    ></textarea>
+                    <div class="help-text">
+                        ℹ️ This announcement will be visible to all students and houses.
+                    </div>
+                    <div class="char-count">
+                        <span id="content-count">0</span> characters
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="form-group">
+                    <label class="form-label">Preview</label>
+                    <div class="preview-box">
+                        <div class="preview-title" id="preview-title">
+                            <span class="preview-empty">Title will appear here...</span>
+                        </div>
+                        <div class="preview-content" id="preview-content">
+                            <span class="preview-empty">Content will appear here...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('captain_dashboard') }}" class="btn btn-cancel">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-submit">
+                        ✅ Post Announcement
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function updateCharCount(inputId, countId, maxLength = null) {
+            const input = document.getElementById(inputId);
+            const count = document.getElementById(countId);
+            const length = input.value.length;
+            
+            count.textContent = length;
+            
+            if (maxLength && length > maxLength * 0.9) {
+                count.classList.add('warning');
+            } else {
+                count.classList.remove('warning');
+            }
+        }
+
+        function updatePreview() {
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+            const previewTitle = document.getElementById('preview-title');
+            const previewContent = document.getElementById('preview-content');
+
+            if (title.trim()) {
+                previewTitle.innerHTML = title;
+            } else {
+                previewTitle.innerHTML = '<span class="preview-empty">Title will appear here...</span>';
+            }
+
+            if (content.trim()) {
+                previewContent.innerHTML = content.replace(/\n/g, '<br>');
+            } else {
+                previewContent.innerHTML = '<span class="preview-empty">Content will appear here...</span>';
+            }
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
