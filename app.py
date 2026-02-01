@@ -163,13 +163,13 @@ def api_login():
             return jsonify({
                 'success': True,
                 'role': 'admin',
-                'redirect': '/admin/dashboard'
+                'redirect': 'http://localhost:5000/admin/dashboard'
             })
         else:
             return jsonify({
                 'success': True,
                 'role': 'captain',
-                'redirect': '/captain/dashboard'
+                'redirect': 'http://localhost:5000/captain/dashboard'
             })
     
     return jsonify({'success': False, 'error': 'Invalid username or password'}), 401

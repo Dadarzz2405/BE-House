@@ -175,6 +175,5 @@ def seed_mock_data():
         db.session.commit()
         print("Mock data seeding completed ✅")
 
-
 if __name__ == "__main__":
     seed_mock_data()
