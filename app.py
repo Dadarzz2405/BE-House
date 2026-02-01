@@ -145,36 +145,46 @@ def announcements():
 #                   LOGIN/LOGOUT ROUTES
 #=========================================================
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        user = (
-            Admin.query.filter_by(username=username).first()
-            or Captain.query.filter_by(username=username).first()
-        )
-        
-        if user and check_password_hash(user.password_hash, password):
-            login_user(user)
-            
-            if isinstance(user, Admin):
-                return redirect(url_for('admin_dashboard'))
-            else:
-                return redirect(url_for('captain_dashboard'))
-        
-        flash('Invalid username or password', 'error')
-        return redirect(url_for('login'))
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
     
-    return render_template('login.html')
+    user = (
+        Admin.query.filter_by(username=username).first()
+        or Captain.query.filter_by(username=username).first()
+    )
+    
+    if user and check_password_hash(user.password_hash, password):
+        login_user(user)
+        
+        if isinstance(user, Admin):
+            return jsonify({
+                'success': True,
+                'role': 'admin',
+                'redirect': '/admin/dashboard'
+            })
+        else:
+            return jsonify({
+                'success': True,
+                'role': 'captain',
+                'redirect': '/captain/dashboard'
+            })
+    
+    return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
+
+@app.route('/login', methods=['GET'])
+def login():
+    # Just redirect to React app for login UI
+    return redirect('http://localhost:5173/login')
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     flash('You have been logged out.', 'success')
-    return redirect(url_for('login'))
+    return redirect('http://localhost:5173/login')
 
 #=========================================================
 #                   JINJA TEMPLATE ROUTES (Admin)
@@ -331,9 +341,9 @@ def captain_delete_announcement(announcement_id):
 @app.route('/')
 @app.route('/<path:path>')
 def serve_react(path=''):
-    """Serve React app for all non-admin/captain routes"""
-    # Don't serve React for admin/captain/login routes
-    if path.startswith('admin') or path.startswith('captain') or path == 'login':
+    """Serve React app for all non-admin/captain/login routes"""
+    # Don't serve React for admin/captain routes
+    if path.startswith('admin') or path.startswith('captain'):
         abort(404)
     return render_template('react_base.html')
 
