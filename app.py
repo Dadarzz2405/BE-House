@@ -23,18 +23,16 @@ app.config.update(
 )
 
 # CORS configuration - MUST allow credentials for cross-origin cookies
-CORS(app, 
-     resources={r"/*": {"origins": [
-         "http://localhost:5173",
-         "http://localhost:5000",
-         "https://houses-web.onrender.com",
-         "https://darsahouse.netlify.app"
-     ]}},
-     supports_credentials=True,  # This is critical!
-     allow_headers=["Content-Type", "Authorization"],
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     expose_headers=["Set-Cookie"]  # Allow cookies to be sent
+CORS(
+    app,
+    resources={r"/*": {"origins": [
+        "http://localhost:5173",
+        "https://darsahouse.netlify.app",
+        "https://houses-web.onrender.com",
+    ]}},
+    supports_credentials=True,
 )
+
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -160,45 +158,34 @@ def announcements():
 #                   LOGIN/LOGOUT ROUTES
 #=========================================================
 
-@app.route('/api/login', methods=['POST', 'OPTIONS'])
+@app.route('/api/login', methods=['POST'])
 def api_login():
-    # Handle preflight OPTIONS request
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
-        return response
-    
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
+
     user = (
         Admin.query.filter_by(username=username).first()
         or Captain.query.filter_by(username=username).first()
     )
-    
+
     if user and check_password_hash(user.password_hash, password):
-        login_user(user, remember=True)  # remember=True helps with persistence
-        
-        # Use environment variable or default to production URL
-        base_url = os.environ.get('BASE_URL', 'https://houses-web.onrender.com')
-        
-        response_data = {
+        login_user(user)
+
+        base_url = os.environ.get(
+            'BASE_URL', 'https://houses-web.onrender.com'
+        )
+
+        return jsonify({
             'success': True,
             'role': 'admin' if isinstance(user, Admin) else 'captain',
-            'redirect': f'{base_url}/admin/dashboard' if isinstance(user, Admin) else f'{base_url}/captain/dashboard'
-        }
-        
-        response = jsonify(response_data)
-        # Explicitly set CORS headers
-        response.headers.add('Access-Control-Allow-Origin', request.headers.get('Origin', '*'))
-        response.headers.add('Access-Control-Allow-Credentials', 'true')
-        return response
-    
-    return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
+            'redirect': f'{base_url}/admin/dashboard'
+            if isinstance(user, Admin)
+            else f'{base_url}/captain/dashboard'
+        })
+
+    return jsonify({'error': 'Invalid username or password'}), 401
+
 
 @app.route('/login', methods=['GET'])
 def login():
