@@ -9,7 +9,11 @@ services:
         value: 3.9.0
       - key: SECRET_KEY
         generateValue: true
+      - key: FLASK_ENV
+        value: production
       - key: BASE_URL
         value: https://houses-web.onrender.com
       - key: FRONTEND_URL
         value: https://darsahouse.netlify.app
+      - key: RENDER
+        value: true

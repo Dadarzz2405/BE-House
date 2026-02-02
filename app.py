@@ -21,23 +21,44 @@ app.config['SECRET_KEY'] = os.environ.get(
 )
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Determine environment
+IS_PRODUCTION = os.environ.get('FLASK_ENV') == 'production' or os.environ.get('RENDER')
+
 # Session config for cross-origin cookies
-app.config.update(
-    SESSION_COOKIE_SAMESITE="None",
-    SESSION_COOKIE_SECURE=True,
-    SESSION_COOKIE_HTTPONLY=True,
-)
+if IS_PRODUCTION:
+    # Production: strict settings for cross-origin
+    app.config.update(
+        SESSION_COOKIE_SAMESITE="None",
+        SESSION_COOKIE_SECURE=True,
+        SESSION_COOKIE_HTTPONLY=True,
+        SESSION_COOKIE_DOMAIN=None,  # Let Flask handle it
+    )
+else:
+    # Development: relaxed settings for localhost
+    app.config.update(
+        SESSION_COOKIE_SAMESITE="Lax",
+        SESSION_COOKIE_SECURE=False,
+        SESSION_COOKIE_HTTPONLY=True,
+    )
+
+# CORS configuration
+allowed_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5000",
+    "https://darsahouse.netlify.app",
+    "https://houses-web.onrender.com",
+]
 
 CORS(
     app,
     supports_credentials=True,
     resources={
         r"/*": {
-            "origins": [
-                "http://localhost:5173",
-                "https://darsahouse.netlify.app",
-                "https://houses-web.onrender.com",
-            ]
+            "origins": allowed_origins,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "expose_headers": ["Content-Type"],
         }
     }
 )
@@ -258,6 +279,11 @@ def admin_add_points():
     if not house_id or not points or not reason:
         return jsonify({"error": "All fields are required"}), 400
 
+    try:
+        points = int(points)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Points must be a valid number"}), 400
+
     if points <= 0:
         return jsonify({"error": "Points must be a positive integer"}), 400
     
@@ -294,6 +320,11 @@ def admin_deduct_points():
 
     if not house_id or not points or not reason:
         return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        points = int(points)
+    except (ValueError, TypeError):
+        return jsonify({"error": "Points must be a valid number"}), 400
 
     if points <= 0:
         return jsonify({"error": "Points must be a positive integer"}), 400
