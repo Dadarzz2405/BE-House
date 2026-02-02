@@ -14,6 +14,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = \
     'sqlite:///' + os.path.join(basedir, 'app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', '330bf9312848e19d9a88482a033cb4f566c4cbe06911fe1e452ebade42f0bc4c')
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+)
 
 # Updated CORS configuration for production
 ALLOWED_ORIGINS = [
@@ -195,6 +200,14 @@ def logout():
     flash('You have been logged out.', 'success')
     frontend_url = os.environ.get('FRONTEND_URL', 'https://darsahouse.netlify.app')
     return redirect(f'{frontend_url}/login')
+
+@app.route("/api/me")
+@login_required
+def me():
+    return jsonify({
+        "id": current_user.id,
+        "role": "admin" if isinstance(current_user, Admin) else "captain"
+    })
 
 #=========================================================
 #                   JINJA TEMPLATE ROUTES (Admin)
