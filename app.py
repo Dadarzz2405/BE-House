@@ -8,12 +8,18 @@ from flask_cors import CORS
 from models import Announcement, PointTransaction, db, Admin, House, Captain, Member, Achievement
 from werkzeug.middleware.proxy_fix import ProxyFix
 from datetime import datetime
-
-basedir = os.path.abspath(os.path.dirname(__file__))
+from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+import cloudinary
+import cloudinary.uploader
+from cloudinary.utils import cloudinary_url
+load_dotenv()
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = \
-    'sqlite:///' + os.path.join(basedir, 'app.db')
+if os.getenv("RENDER"):
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL")
+else:
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.environ.get(
     'SECRET_KEY',
@@ -21,15 +27,12 @@ app.config['SECRET_KEY'] = os.environ.get(
 )
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# 🔧 AUTO-DETECT ENVIRONMENT
 is_production = (
     os.environ.get('FLASK_ENV') == 'production' 
     or os.environ.get('RENDER') == 'true'
 )
 
-# Session config - different for local vs production
 if is_production:
-    # Production: cross-origin requires SameSite=None and Secure=True
     app.config.update(
         SESSION_COOKIE_SAMESITE="None",
         SESSION_COOKIE_SECURE=True,
@@ -48,18 +51,44 @@ else:
 CORS(
     app,
     supports_credentials=True,
-    resources={
-        r"/*": {
-            "origins": [
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "http://localhost:5000",
-                "https://darsahouse.netlify.app",
-                "https://houses-web.onrender.com",
-            ]
-        }
-    }
+    origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "https://darsahouse.netlify.app",
+        "https://houses-web.onrender.com",
+    ],
+    allow_headers=["Content-Type", "Authorization", "Accept"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    expose_headers=["Content-Type"],
+    max_age=3600
 )
+cloudinary.config(
+    cloud_name=os.environ.get('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.environ.get('CLOUDINARY_API_KEY'),
+    api_secret=os.environ.get('CLOUDINARY_API_SECRET'),
+    secure=True
+)
+@app.after_request
+def after_request(response):
+    origin = request.headers.get('Origin')
+    if origin in [
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:5000",
+        "http://127.0.0.1:5000",
+        "https://darsahouse.netlify.app",
+        "https://houses-web.onrender.com",
+    ]:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept'
+    
+    print(f"Response: {request.method} {request.path} - Status: {response.status_code}")
+    
+    return response
 
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -108,7 +137,8 @@ def get_houses():
             "id": h.id,
             "name": h.name,
             "points": h.house_points,
-            "description": h.description
+            "description": h.description,
+            "logo_url": h.logo_url or f"https://via.placeholder.com/500?text={h.name}"  
         }
         for h in houses
     ])
@@ -121,7 +151,8 @@ def live_scores():
             "rank": i + 1,
             "name": h.name,
             "points": h.house_points,
-            "description": h.description
+            "description": h.description,
+            "logo_url": h.logo_url or f"https://via.placeholder.com/500?text={h.name}" 
         }
         for i, h in enumerate(houses)
     ])
@@ -242,7 +273,8 @@ def admin_dashboard():
                 "id": h.id,
                 "name": h.name,
                 "points": h.house_points,
-                "description": h.description
+                "description": h.description,
+                "logo_url": h.logo_url or f"https://via.placeholder.com/500?text={h.name}" 
             }
             for h in houses
         ],
@@ -350,7 +382,54 @@ def admin_deduct_points():
             "points": house.house_points
         }
     })
+@app.route('/api/admin/house/<int:house_id>/logo', methods=['POST'])
+@login_required
+@admin_required
+def update_house_logo(house_id):
+    house = House.query.get_or_404(house_id)
+    
+    if 'logo' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    
+    file = request.files['logo']
+    
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+    
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    file_ext = file.filename.rsplit('.', 1)[1].lower()
+    if file_ext not in allowed_extensions:
+        return jsonify({
+            "error": "Invalid file type. Allowed: png, jpg, jpeg, gif, webp"
+        }), 400
+    
+    try:
+        upload_result = cloudinary.uploader.upload(
+            file,
+            public_id=f"houses/{house.name}",  
+            overwrite=True,  
+            invalidate=True,  
+            resource_type="image"
+        )
+        
+        house.logo_url = upload_result['secure_url']
+        db.session.commit()
+        
+        return jsonify({
+            "success": True,
+            "message": f"Logo updated for {house.name}",
+            "url": upload_result['secure_url']
+        })
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
+@app.route('/api/houses/<int:house_id>/logo')
+def get_house_logo(house_id):
+    house = House.query.get_or_404(house_id)
+    return jsonify({
+        "url": house.logo_url or f"https://via.placeholder.com/500?text={house.name}"
+    })
 # =====================
 # CAPTAIN ROUTES
 # =====================

@@ -26,6 +26,7 @@ class House(db.Model):
     name = db.Column(db.String(150), nullable=False)
     description = db.Column(db.Text)
     house_points = db.Column(db.Integer, default=0)
+    logo_url = db.Column(db.String(500))
 
     members = db.relationship('Member', back_populates='house')
     captains = db.relationship('Captain', back_populates='house')
